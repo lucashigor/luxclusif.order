@@ -1,0 +1,62 @@
+version: '3.4'
+
+services:
+  trainerhut.persons.webapi:
+    image: ${DOCKER_REGISTRY-}luxclusiforderwebapi
+    build:
+      context: .
+      dockerfile: luxclusif.order.webapi/Dockerfile
+    networks: 
+    - luxclusif-order-network 
+
+  luxclusif-order-postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "P@ssw0rd"
+      POSTGRES_DB: "luxclusif.order"
+    networks:
+      - luxclusif-order-network
+    volumes:
+      - ./Local/pgdata:/var/lib/postgresql/data
+
+  luxclusif-order-pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "16543:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@luxclusif.com"
+      PGADMIN_DEFAULT_PASSWORD: "P@ssw0rd"
+    networks:
+      - luxclusif-order-network
+    depends_on:
+      - luxclusif-order-postgres
+
+  luxclusif-order-schema:
+    image: flyway/flyway
+    command: -configFiles=/flyway/conf/flyway.conf -locations=filesystem:/flyway/sql -connectRetries=60 migrate
+    volumes:
+      - ./Local/database/dev-data:/flyway/sql
+      - ./Local/drivers:/flyway/drivers
+      - ./Local/database/conf:/flyway/conf
+    depends_on:
+      - luxclusif-order-network
+    networks:
+      - luxclusif-order-network
+
+  luxclusif-order-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - ./Local/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./Local/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - luxclusif-order-network
+
+networks:
+  luxclusif-order-network:
+    driver: bridge
