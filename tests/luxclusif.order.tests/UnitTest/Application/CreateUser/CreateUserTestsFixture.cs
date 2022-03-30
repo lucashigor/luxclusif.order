@@ -15,7 +15,9 @@ public class CreateUserTestsFixture : UnitBaseFixture
     public CreateOrderInput GetUserCreateInput()
     {
         return new CreateOrderInput(
-            GetValidUserName()
+            GetValidUserName(),
+            System.Guid.NewGuid(),
+            120
             );
     }
 

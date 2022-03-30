@@ -11,6 +11,9 @@ public class CreateOrderOutput
     public DateTimeOffset? LastUpdateAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 
+    public CreateOrderOutput()
+    { }
+
     public CreateOrderOutput(Guid id, Guid userId,string name, decimal value,DateTimeOffset createdAt, DateTimeOffset? lastUpdateAt, DateTimeOffset? deletedAt)
     {
         Id = id;

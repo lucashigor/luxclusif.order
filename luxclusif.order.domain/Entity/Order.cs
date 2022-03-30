@@ -11,10 +11,10 @@ public class Order : AgregateRoot
     public Order(string name, Guid userId, decimal value) : base ()
     {
         this.Name = name;
-
-        this.Validate();
         this.UserId = userId;
         this.Value = value;
+
+        this.Validate();
     }
 
     protected override void Validate()

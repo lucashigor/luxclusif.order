@@ -34,7 +34,9 @@ public class BaseFixture
     public virtual DomainEntity.Order GetValidUser()
     {
         return new DomainEntity.Order(
-            GetValidUserName()
+            GetValidUserName(),
+            System.Guid.NewGuid(),
+            120
             );
     }
 }

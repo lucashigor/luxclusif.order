@@ -53,7 +53,7 @@ public class CreateOrder :
 
             await unityOfWork.CommitAsync(cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             notifier.Erros.Add(ErrorCodeConstant.ErrorOnSavingNewUser);
 

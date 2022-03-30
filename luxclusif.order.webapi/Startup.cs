@@ -1,12 +1,10 @@
-﻿using FluentValidation;
-using FluentValidation.AspNetCore;
+﻿using FluentValidation.AspNetCore;
 using Hangfire;
-using Hangfire.Dashboard;
+using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
-using luxclusif.order.application.UseCases.Order.CreateOrder;
 using luxclusif.order.kernel.Extensions;
 using luxclusif.order.webapi.Extensions;
-using luxclusif.order.webapi.Validators;
+using luxclusif.order.webapi.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -19,14 +17,42 @@ namespace luxclusif.order.webapi
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "";
+            var conf = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{env}.json");
+
+            Configuration = conf.Build();
         }
+
+        private string env;
 
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            if (env != "Test")
+            {
+                services.AddHangfire(configuration => configuration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection"), new PostgreSqlStorageOptions
+                {
+                    QueuePollInterval = TimeSpan.FromSeconds(10),
+                }));
+            }
+            else
+            {
+                services.AddHangfire(config =>
+                {
+                    config.UseMemoryStorage();
+                });
+            }
+
+            services.AddHangfireServer();
+
             services
                 .AddDbContexts(Configuration)
                 .AddUseCases()
@@ -34,16 +60,12 @@ namespace luxclusif.order.webapi
                 .AddHttpContextAccessor()
                 .AddControllers(options =>
                 {
-                    //options.Filters.Add(typeof(MySampleActionFilter));
                 })
                 .AddFluentValidation(options =>
                 {
                     options.RegisterValidatorsFromAssemblyContaining<Startup>();
                 })
                 .AddNewtonsoftJson(opts => opts.SerializerSettings.Converters.Add(new StringEnumConverter()));
-
-
-            services.AddTransient<IValidator<CreateOrderInput>, CreateOrderInputValidator>();
 
             services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -62,17 +84,6 @@ namespace luxclusif.order.webapi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "luxclusif.order.webapi", Version = "v1" });
             });
-
-            services.AddHangfire(configuration => configuration
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection"), new PostgreSqlStorageOptions
-                {
-                    QueuePollInterval = TimeSpan.FromMinutes(1),
-                }));
-
-            services.AddHangfireServer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -85,13 +96,17 @@ namespace luxclusif.order.webapi
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "luxclusif.order.webapi v1"));
             }
 
-            app.UseHangfireDashboard();
-            BackgroundJob.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
-
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            var options = new DashboardOptions
             {
-                IsReadOnlyFunc = (DashboardContext context) => true
-            });
+                Authorization = new[] {
+                    new DashboardAuthorization(new[]
+                    {
+                        new HangfireUserCredentials("user1",  "P@ssw0rd")
+                    })
+                }
+            };
+
+            app.UseHangfireDashboard("/hangfire", options);
 
             app.UseGlobalExceptionHandlerMiddleware();
 
@@ -104,7 +119,6 @@ namespace luxclusif.order.webapi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHangfireDashboard();
             });
         }
     }
