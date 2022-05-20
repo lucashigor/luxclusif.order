@@ -28,7 +28,9 @@ public class UserTest
         //Act
         var datetimeBefore = DateTime.UtcNow;
 
-        var user = new DomainEntity.Order(validData.Name);
+        var user = new DomainEntity.Order(validData.Name,
+            System.Guid.NewGuid(),
+            120);
 
         var datetimeAfter = DateTime.UtcNow.AddSeconds(1);
 
@@ -49,7 +51,9 @@ public class UserTest
 
         //Act
         Action action =
-            () => new DomainEntity.Order(null!);
+            () => new DomainEntity.Order(null!,
+            System.Guid.NewGuid(),
+            120);
 
         //Assert
         var msg = ErrorsMessages.NotNull.GetMessage(nameof(DomainEntity.Order.Name));
@@ -95,7 +99,9 @@ public class UserTest
 
         //Act
         Action action =
-            () => new DomainEntity.Order(name);
+            () => new DomainEntity.Order(name,
+            System.Guid.NewGuid(),
+            120);
 
         //Assert
         action.Should().Throw<EntityGenericException>()

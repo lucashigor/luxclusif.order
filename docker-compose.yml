@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  trainerhut.persons.webapi:
+  luxclusif.order.webapi:
     image: ${DOCKER_REGISTRY-}luxclusiforderwebapi
     build:
       context: .
@@ -28,6 +28,11 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "admin@luxclusif.com"
       PGADMIN_DEFAULT_PASSWORD: "P@ssw0rd"
+    volumes:
+      - ./Local/pgadmin/pgadmin:/var/lib/pgadmin \
+      - ./Local/pgadmin/certs/certificate.cert:/certs/server.cert \
+      - ./Local/pgadmin/certs/certificate.key:/certs/server.key \
+      - ./Local/pgadmin/tmp/servers.json:/pgadmin4/servers.json
     networks:
       - luxclusif-order-network
     depends_on:
@@ -41,13 +46,12 @@ services:
       - ./Local/drivers:/flyway/drivers
       - ./Local/database/conf:/flyway/conf
     depends_on:
-      - luxclusif-order-network
+      - luxclusif-order-postgres
     networks:
       - luxclusif-order-network
 
   luxclusif-order-rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: 'rabbitmq'
     ports:
         - 5672:5672
         - 15672:15672

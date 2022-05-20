@@ -7,7 +7,6 @@ namespace luxclusif.order.application.Notifications
 {
     public class DefaultNotification : INotificationHandler<DefaultMessageNotification>
     {
-
         public readonly IMessageSenderInterface message;
 
         public DefaultNotification(IMessageSenderInterface message)
@@ -17,7 +16,7 @@ namespace luxclusif.order.application.Notifications
 
         public Task Handle(DefaultMessageNotification notification, CancellationToken cancellationToken)
         {
-            BackgroundJob.Enqueue(() => message.Send(notification.EventName, notification.Data).GetAwaiter().GetResult());
+            BackgroundJob.Enqueue(() => message.Send(notification.EventName, notification.Data));
 
             return Task.CompletedTask;
         }

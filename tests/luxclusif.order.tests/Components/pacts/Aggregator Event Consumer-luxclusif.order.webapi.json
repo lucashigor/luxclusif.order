@@ -1,0 +1,60 @@
+{
+  "consumer": {
+    "name": "Aggregator Event Consumer"
+  },
+  "messages": [
+    {
+      "contents": [
+        {
+          "userId": "97b9e2a8-cb06-496e-9118-c7451e4b465a",
+          "value": 1.23
+        }
+      ],
+      "description": "topic.createdorder",
+      "matchingRules": {
+        "body": {
+          "$": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "type",
+                "min": 1
+              }
+            ]
+          },
+          "$[*].userId": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ]
+          },
+          "$[*].value": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "contentType": "application/json"
+      }
+    }
+  ],
+  "metadata": {
+    "pactRust": {
+      "ffi": "0.2.2",
+      "models": "0.2.7"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "luxclusif.order.webapi"
+  }
+}

@@ -10,12 +10,12 @@ namespace luxclusif.order.application.UseCases.Order.CreateOrder;
 public class CreateOrder :
     IRequestHandler<CreateOrderInput, CreateOrderOutput>
 {
-    public readonly IOrderRepository userRepository;
-    public readonly IUnitOfWork unityOfWork;
-    public readonly Notifier notifier;
-    public readonly IMediator mediator;
+    private readonly IOrderRepository userRepository;
+    private readonly IUnitOfWork unityOfWork;
+    private readonly Notifier notifier;
+    private readonly IMediator mediator;
 
-    private readonly string EventName = "topic.createdorder";
+    public readonly string EventName = "topic.createdorder";
 
     public CreateOrder(IOrderRepository userRepository,
         IUnitOfWork unityOfWork,
@@ -53,7 +53,7 @@ public class CreateOrder :
 
             await unityOfWork.CommitAsync(cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             notifier.Erros.Add(ErrorCodeConstant.ErrorOnSavingNewUser);
 
